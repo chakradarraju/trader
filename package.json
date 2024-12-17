@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "backtest": "npx tsx ./src/backtester/main.ts",
+    "bt": "npx tsx ./src/backtester/main.ts --file=data/crude.csv",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

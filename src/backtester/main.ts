@@ -42,7 +42,7 @@ Papa.parse(csvFile, {
         time: time(row)
       });  
     } else if (cnt === 10) {
-      orderManager = new MockOrderManager(100000, 0);
+      orderManager = new MockOrderManager('CRUDEM', 100000, 0);
       superTrendStrategy = new SuperTrendStrategy('CRUDEM', 10, 3, d, orderManager);
     } else {
       superTrendStrategy?.process(time(row), price(row));

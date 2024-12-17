@@ -12,7 +12,8 @@ export type Action = {
 
 export enum ActionType {
   Buy = "BUY",
-  Sell = "SELL"
+  Sell = "SELL",
+  StopLoss = "STOPLOSS",
 }
 
 export enum PriceType {
