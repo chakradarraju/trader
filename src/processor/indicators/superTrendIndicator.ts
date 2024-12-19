@@ -20,7 +20,7 @@ export class SuperTrendIndicator extends BaseIndicator {
   factor: number;
   context: SuperTrendContext;
 
-  constructor(atrPeriod: number, factor: number, pastFrames: {price: TimeframePrice, time: Date}[]) {
+  constructor(atrPeriod: number, factor: number, pastFrames: TimeframePrice[]) {
     super()
     this.atrPeriod = atrPeriod;
     this.factor = factor;
@@ -30,8 +30,8 @@ export class SuperTrendIndicator extends BaseIndicator {
     const firstFrame = pastFrames[0];
     const firstSuperTrendFrame = {
       time: firstFrame.time,
-      price: firstFrame.price,
-      tr: firstFrame.price.high - firstFrame.price.low,
+      price: firstFrame,
+      tr: firstFrame.high - firstFrame.low,
       atr: 0,
       upperBand: 0,
       lowerBand: 0,
@@ -43,7 +43,7 @@ export class SuperTrendIndicator extends BaseIndicator {
     };
 
     for (var i = 1; i < pastFrames.length; i++) {
-      this.process(pastFrames[i].time, pastFrames[i].price);
+      this.process(pastFrames[i]);
     }
   }
 
@@ -94,12 +94,12 @@ export class SuperTrendIndicator extends BaseIndicator {
     return trSum / count;
   }
 
-  process(time: Date, price: TimeframePrice): void {
+  process(price: TimeframePrice): void {
     const lastFrame = this.context.frames[this.context.frames.length - 1];
     const tr = this.trueRange(price, lastFrame.price.close);
     const atr = this.calculateATR(tr);
     
-    const latestSuperTrendFrame = this.calculateNextFrame(time, price, tr, atr, lastFrame);
+    const latestSuperTrendFrame = this.calculateNextFrame(price.time, price, tr, atr, lastFrame);
     this.context.frames.push(latestSuperTrendFrame);
     this.context.latestFrame = latestSuperTrendFrame;
   }

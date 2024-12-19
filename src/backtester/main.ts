@@ -28,7 +28,7 @@ if (!datafile) {
   process.exit(1);
 }
 
-const d: {price: TimeframePrice, time: Date}[] = [];
+const d: TimeframePrice[] = [];
 var cnt = 0;
 
 const csvFile = fs.readFileSync(datafile, 'utf8');
@@ -36,12 +36,9 @@ const csvFile = fs.readFileSync(datafile, 'utf8');
 var orderManager: MockOrderManager | null = null;
 var strategy: BaseStrategy | null = null;
 
-function time(row: any): Date {
-  return new Date(row.data.time * 1000);
-}
-
-function price(row: any): TimeframePrice {
+function frame(row: any): TimeframePrice {
   return {
+    time: new Date(row.data.time * 1000),
     open: row.data.open,
     close: row.data.open,
     high: row.data.high,
@@ -54,10 +51,7 @@ Papa.parse(csvFile, {
   dynamicTyping: true,
   step: (row: any) => {
     if (cnt < period) {
-      d.push({
-        price: price(row),
-        time: time(row)
-      });  
+      d.push(frame(row));  
     } else if (cnt === period) {
       orderManager = new MockOrderManager('CRUDEM', cash, 0);
       if (strategyName === Strategy.SUPERTREND) {
@@ -66,7 +60,7 @@ Papa.parse(csvFile, {
         strategy = new RSIStrategy('CRUDEM', period, d, orderManager, stoplossThreshold);
       }
     } else {
-      strategy?.process(time(row), price(row));
+      strategy?.process(frame(row));
     }
     cnt++;
   },

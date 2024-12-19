@@ -9,7 +9,7 @@ export class RSIStrategy extends BaseStrategy {
   indicator: RSI;
   lastStopLoss: Date | null;
 
-  constructor(symbol: string, period: number, pastFrames: {price: TimeframePrice, time: Date}[], orderManager: OrderManager, stoplossThreshold?: number) {
+  constructor(symbol: string, period: number, pastFrames: TimeframePrice[], orderManager: OrderManager, stoplossThreshold?: number) {
     super(symbol, orderManager, stoplossThreshold);
     this.symbol = symbol;
     this.indicator = new RSI(period, pastFrames);
@@ -26,7 +26,7 @@ export class RSIStrategy extends BaseStrategy {
     return false;
   }
 
-  buyQuantity(time: Date, price: TimeframePrice, holding: Holding, orders: Order[]): number {
+  buyQuantity(price: TimeframePrice, holding: Holding, orders: Order[]): number {
     const frames = this.indicator.context.frames;
     if (frames.length < 2) return 0;
     const prevRsi = frames[frames.length - 2].rsi;
@@ -43,10 +43,10 @@ export class RSIStrategy extends BaseStrategy {
     return 0;
   }
 
-  sellQuantity(time: Date, price: TimeframePrice, holding: Holding, orders: Order[]): number {
+  sellQuantity(price: TimeframePrice, holding: Holding, orders: Order[]): number {
     const rsi = this.indicator.context.latestFrame.rsi;
     if (rsi > 70) {
-      
+
       return holding.units;
     }
     if (rsi > 60) {
@@ -58,8 +58,8 @@ export class RSIStrategy extends BaseStrategy {
     return 0;
   }
 
-  process(time: Date, tfPrice: TimeframePrice): void {
-    this.buyOrSellBasedOnPastData(time, tfPrice);
-    this.indicator.process(time, tfPrice);
+  process(tfPrice: TimeframePrice): void {
+    this.buyOrSellBasedOnPastData(tfPrice);
+    this.indicator.process(tfPrice);
   }
 }

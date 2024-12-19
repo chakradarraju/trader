@@ -17,7 +17,7 @@ export class RSI extends BaseIndicator {
   period: number;
   context: RSIContext;
 
-  constructor(period: number, pastFrames: {price: TimeframePrice, time: Date}[]) {
+  constructor(period: number, pastFrames: TimeframePrice[]) {
     super();
     this.period = period;
     if (pastFrames.length < period || period < 2) {
@@ -27,7 +27,7 @@ export class RSI extends BaseIndicator {
     const firstFrame = pastFrames[0];
     const firstRSIFrame = {
       time: firstFrame.time,
-      price: firstFrame.price,
+      price: firstFrame,
       upwardChange: 0,
       downwardChange: 0,
       rsi: 0
@@ -37,7 +37,7 @@ export class RSI extends BaseIndicator {
       latestFrame: firstRSIFrame
     }
     for (var i = 1; i < pastFrames.length; i++) {
-      this.process(pastFrames[i].time, pastFrames[i].price);
+      this.process(pastFrames[i]);
     }
   }
 
@@ -55,14 +55,14 @@ export class RSI extends BaseIndicator {
     return 100 - (100 / (1 + upwardChange / downwardChange));
   }
 
-  process(time: Date, price: TimeframePrice): void {
+  process(price: TimeframePrice): void {
     const lastFrame = this.context.frames[this.context.frames.length - 1];
     const lastClose = lastFrame.price.close;
     const upwardChange = Math.max(0, price.close - lastClose);
     const downwardChange = Math.max(0, lastClose - price.close);
     const rsi = this.calculateRSI(upwardChange, downwardChange);
     const latestFrame = {
-      time,
+      time: price.time,
       price,
       upwardChange,
       downwardChange,

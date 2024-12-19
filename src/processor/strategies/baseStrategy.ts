@@ -16,11 +16,11 @@ export abstract class BaseStrategy {
     this.lastStopLoss = null;
   }
 
-  abstract process(time: Date, tfPrice: TimeframePrice): void;
+  abstract process(tfPrice: TimeframePrice): void;
 
-  abstract buyQuantity(time: Date, price: TimeframePrice, holding: Holding, orders: Order[]): number;
+  abstract buyQuantity(price: TimeframePrice, holding: Holding, orders: Order[]): number;
 
-  abstract sellQuantity(time: Date, price: TimeframePrice, holding: Holding, orders: Order[]): number;
+  abstract sellQuantity(price: TimeframePrice, holding: Holding, orders: Order[]): number;
 
   execute(time: Date, type: ActionType, limit: number, quantity: number) {
     const action: Action = {
@@ -34,15 +34,16 @@ export abstract class BaseStrategy {
     this.orderManager.process(action);
   }
 
-  buyOrSellBasedOnPastData(time: Date, tfPrice: TimeframePrice) {
+  buyOrSellBasedOnPastData(tfPrice: TimeframePrice) {
+    const time = tfPrice.time;
     const openPrice = tfPrice.open;
     if (this.orderManager.processStopLoss(time, tfPrice)) {
       this.lastStopLoss = time;
     }
     const currentPosition = this.orderManager.getHolding();
     const orders = this.orderManager.getOrders();
-    const buyQty = this.buyQuantity(time, tfPrice, currentPosition, orders);
-    const sellQty = this.sellQuantity(time, tfPrice, currentPosition, orders);
+    const buyQty = this.buyQuantity(tfPrice, currentPosition, orders);
+    const sellQty = this.sellQuantity(tfPrice, currentPosition, orders);
     if (buyQty > 0 && sellQty > 0) throw `Something wrong buy: ${buyQty} ${sellQty} at ${time.toISOString()}`;
     if (buyQty > 0) {  // Buy
       if (this.lastStopLoss !== null && time.getTime() - this.lastStopLoss.getTime() < STOPLOSS_COOLOFF) {
