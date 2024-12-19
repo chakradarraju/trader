@@ -94,12 +94,12 @@ export class SuperTrendIndicator extends BaseIndicator {
     return trSum / count;
   }
 
-  process(time: Date, tfPrice: TimeframePrice): void {
+  process(time: Date, price: TimeframePrice): void {
     const lastFrame = this.context.frames[this.context.frames.length - 1];
-    const tr = this.trueRange(tfPrice, lastFrame.price.close);
+    const tr = this.trueRange(price, lastFrame.price.close);
     const atr = this.calculateATR(tr);
     
-    const latestSuperTrendFrame = this.calculateNextFrame(time, tfPrice, tr, atr, lastFrame);
+    const latestSuperTrendFrame = this.calculateNextFrame(time, price, tr, atr, lastFrame);
     this.context.frames.push(latestSuperTrendFrame);
     this.context.latestFrame = latestSuperTrendFrame;
   }

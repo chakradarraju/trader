@@ -3,10 +3,27 @@ import minimist from 'minimist';
 import fs from 'fs';
 import { MockOrderManager } from "@/processor/orderManager/mockOrderManager";
 import { SuperTrendStrategy } from "@/processor/strategies/superTrendStrategy";
+import { BaseStrategy } from "@/processor/strategies/baseStrategy";
+import { RSIStrategy } from "@/processor/strategies/RSIStrategy";
+
+enum Strategy {
+  SUPERTREND = 'supertrend',
+  RSI = 'rsi'
+}
 
 const argv = minimist(process.argv.slice(2));
+const datafile = argv.file;
+const period = argv.period ?? 14;
+const cash = argv.cash ?? 1000000;
+const strategyName: Strategy = argv.strategy ?? Strategy.RSI;
+const stoplossThreshold: number | undefined = argv.stoplossThreshold;
 
-if (!argv.file) {
+if (stoplossThreshold && (stoplossThreshold < 0 || stoplossThreshold >= 1)) {
+  console.error('Stoploss threshold needs to be between 0 and 1');
+  process.exit(1);
+}
+
+if (!datafile) {
   console.error('file argument missing');
   process.exit(1);
 }
@@ -14,10 +31,10 @@ if (!argv.file) {
 const d: {price: TimeframePrice, time: Date}[] = [];
 var cnt = 0;
 
-const csvFile = fs.readFileSync(argv.file, 'utf8');
+const csvFile = fs.readFileSync(datafile, 'utf8');
 
 var orderManager: MockOrderManager | null = null;
-var superTrendStrategy: SuperTrendStrategy | null = null;
+var strategy: BaseStrategy | null = null;
 
 function time(row: any): Date {
   return new Date(row.data.time * 1000);
@@ -36,16 +53,20 @@ Papa.parse(csvFile, {
   header: true,
   dynamicTyping: true,
   step: (row: any) => {
-    if (cnt < 10) {
+    if (cnt < period) {
       d.push({
         price: price(row),
         time: time(row)
       });  
-    } else if (cnt === 10) {
-      orderManager = new MockOrderManager('CRUDEM', 100000, 0);
-      superTrendStrategy = new SuperTrendStrategy('CRUDEM', 10, 3, d, orderManager);
+    } else if (cnt === period) {
+      orderManager = new MockOrderManager('CRUDEM', cash, 0);
+      if (strategyName === Strategy.SUPERTREND) {
+        strategy = new SuperTrendStrategy('CRUDEM', period, argv.superTrendFactor, d, orderManager, stoplossThreshold);
+      } else if (strategyName === Strategy.RSI) {
+        strategy = new RSIStrategy('CRUDEM', period, d, orderManager, stoplossThreshold);
+      }
     } else {
-      superTrendStrategy?.process(time(row), price(row));
+      strategy?.process(time(row), price(row));
     }
     cnt++;
   },
